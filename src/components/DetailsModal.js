@@ -1,12 +1,13 @@
 'use client';
 import React from 'react';
+import { CrossIcon } from 'lucide-react';
 
 const DetailsModal = ({ onClose, data }) => {
   return (
     <>
       {/* Overlay */}
       <div
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm h-screen w-screen"
         onClick={onClose}
       />
 
@@ -25,7 +26,7 @@ const DetailsModal = ({ onClose, data }) => {
               onClick={onClose}
               className="text-gray-400 hover:text-gray-700 text-xl"
             >
-              ✕
+              <CrossIcon/>
             </button>
           </div>
 

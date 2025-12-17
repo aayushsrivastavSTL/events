@@ -5,8 +5,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { ImSpinner2 } from "react-icons/im";
+import { Html5Qrcode } from "html5-qrcode";
 
-const DetailsModal = dynamic(() => import("../components/DetailsModal"), {
+const DetailsModal = dynamic(() => import("@/components/DetailsModal"), {
   ssr: false,
 });
 
@@ -14,6 +16,7 @@ export default function ScanPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [cameraPermission, setCameraPermission] = useState("prompt");
   const [showModal, setShowModal] = useState(false);
   const scannerRef = useRef(null);
@@ -85,7 +88,7 @@ export default function ScanPage() {
   const startScanning = async () => {
     setError(null);
     setResult(null);
-
+    setLoading(true);
     // Request permission first
     const hasPermission = await requestCameraPermission();
     if (!hasPermission) return;
@@ -97,9 +100,6 @@ export default function ScanPage() {
         // Small delay to ensure camera is fully released
         await new Promise((resolve) => setTimeout(resolve, 300));
       }
-
-      // Dynamically import html5-qrcode
-      const { Html5Qrcode } = await import("html5-qrcode");
 
       // Create new scanner instance with unique ID
       const readerId = "reader";
@@ -130,7 +130,6 @@ export default function ScanPage() {
           // Ignore scanning errors (no QR in view)
         }
       );
-
       setIsScanning(true);
     } catch (err) {
       console.error("Scanner error:", err);
@@ -146,6 +145,8 @@ export default function ScanPage() {
         }
         scannerRef.current = null;
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -188,10 +189,16 @@ export default function ScanPage() {
         <div style={styles.buttonGroup}>
           {!isScanning ? (
             <button
-              onClick={startScanning}
+              onClick={scanAgain}
               style={{ ...styles.button, ...styles.buttonPrimary }}
             >
-              Start Scanning
+              {loading ? (
+                <p className="flex justify-center items-center">
+                  <ImSpinner2 />
+                </p>
+              ) : (
+                <p>Start Scanning</p>
+              )}
             </button>
           ) : (
             <button
