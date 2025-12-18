@@ -12,7 +12,7 @@ const ProfileIcon = () => {
   const [accessCookie, setAccessCookie, removeAccessCookie] = useCookies([
     "accessToken",
   ]);
-  const { user, role } = useContext(UserContext);
+  const { user, role, logout } = useContext(UserContext);
 
   // Close popover on outside click
   useEffect(() => {
@@ -34,11 +34,6 @@ const ProfileIcon = () => {
 
   const handleLogout = async () => {
     try {
-      // Clear local storage
-      localStorage.removeItem("checkpointID");
-      //clear cookie
-      removeAccessCookie("accessToken");
-
       // Call logout API
       const encodedPath = encodeURIComponent("/auth/logout");
       await fetch(`/api/proxy?path=${encodedPath}`, {
@@ -47,14 +42,17 @@ const ProfileIcon = () => {
           "Content-Type": "application/json",
         },
       });
-
-      // Redirect to login
-      router.replace("/");
     } catch (error) {
       console.error("Logout error:", error);
+    } finally {
+      logout(); // Clear context state
       // Clear token anyway and redirect
-      localStorage.removeItem("checkpointID");
-      router.replace("/");
+      removeAccessCookie("accessToken");
+      localStorage.removeItem("checkpoint");
+      // Redirect to login
+      setTimeout(() => {
+        router.push("/");
+      }, 500);
     }
   };
 

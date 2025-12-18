@@ -1,14 +1,13 @@
-'use client';
+"use client";
 import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
 import { useCookies } from "react-cookie";
-
 
 export const UserContext = createContext({});
 
 export const UserContextProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [role , setRole] = useState(null);
+  const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [accessCookie, setAccessCookie, removeAccessCookie] = useCookies([
     "accessToken",
@@ -16,9 +15,8 @@ export const UserContextProvider = ({ children }) => {
   const path = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
   const accessToken = accessCookie.accessToken; //jwt
 
-
   useEffect(() => {
-  const accessToken = accessCookie.accessToken; //jwt
+    const accessToken = accessCookie.accessToken; //jwt
     if (accessToken) {
       //logged in
       fetchUserProfile(accessToken);
@@ -39,12 +37,19 @@ export const UserContextProvider = ({ children }) => {
       const userData = await response.data;
       console.log("userData", userData);
       setUser(userData.user);
-      setRole(userData.userType)
+      setRole(userData.userType);
     } catch (error) {
       console.error("Error fetching user profile:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const logout = () => {
+    removeAccessCookie("accessToken");
+    setUser(null);
+    setRole(null);
+    localStorage.removeItem("checkpoint");
   };
 
   const value = {
@@ -53,6 +58,7 @@ export const UserContextProvider = ({ children }) => {
     role,
     accessToken,
     loading,
+    logout,
     path,
     isAuthenticated: !!accessToken,
   };
