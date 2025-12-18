@@ -13,14 +13,14 @@ const Home = () => {
     if (loading) return;
 
     // user not logged in
-    if (!role) {
+    if (user === null) {
       router.push("/SignIn");
       return;
     }
 
     // user logged in → redirect by role
     if (role === "VOLUNTEER") {
-      router.push("/test");
+      router.push("/scan");
     } else if (role === "ADMIN") {
       router.push("/admin");
     }

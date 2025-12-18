@@ -15,7 +15,7 @@ async function handleProxy(request) {
     }
 
     // Build target URL (trim slashes)
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(
+    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000").replace(
       /\/+$/,
       ""
     );
@@ -84,7 +84,8 @@ async function handleProxy(request) {
     });
   } catch (err) {
     console.error("Proxy error:", err);
-    return new Response(JSON.stringify({ error: "Proxy failed" }), {
+    console.log("Proxy error:", err);
+    return new Response(JSON.stringify({ error: "Proxy failed" , message: err }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });

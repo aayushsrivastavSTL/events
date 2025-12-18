@@ -4,12 +4,16 @@ import { UserContextProvider } from "@/context/UserContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { CookiesProvider } from "react-cookie";
+import Navbar from "@/components/Navbar/Navbar";
 
 const ClientProvider = ({ children }) => {
   return (
     <CookiesProvider>
       <UserContextProvider>
-        {children}
+        <Navbar />
+        <main className="h-max min-h-screen mt-5">
+          {children}
+        </main>
         <ToastContainer
           position="top-right"
           autoClose={2500}
