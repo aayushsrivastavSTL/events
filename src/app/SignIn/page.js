@@ -49,6 +49,17 @@ const SignIn = () => {
     return value;
   };
 
+  const extractPhoneNumberOnly = (phoneNumber) => {
+    let cleanNumber = phoneNumber.replace(/\+/g, "");
+
+    // For Indian numbers, remove the 91 prefix
+    if (cleanNumber.startsWith("91") && cleanNumber.length > 10) {
+      return cleanNumber.substring(2);
+    }
+    // This removes any leading country code (assuming 1-3 digits)
+    return cleanNumber.replace(/^(\d{1,3})(\d{10})$/, "$2");
+  };
+
   // Send OTP
   const handleSendOTP = async () => {
     setError("");
@@ -121,7 +132,7 @@ const SignIn = () => {
 
     try {
       const result = await confirmationResult.confirm(otp);
-      console.log("result",result);
+      console.log("result", result);
       setSuccess("Phone verified successfully!");
       // Get Firebase ID token
       const idToken = await auth.currentUser.getIdToken(true);
@@ -133,11 +144,10 @@ const SignIn = () => {
       await logInProcesses(idToken);
 
       setTimeout(() => {
-        router.push("/"); 
-      }, 2000); 
+        router.push("/");
+      }, 2000);
     } catch (err) {
       console.error(err);
-
 
       setError("Invalid OTP. Please try again.");
     } finally {
@@ -148,10 +158,9 @@ const SignIn = () => {
   const checkIfUserExists = async () => {
     try {
       // Format phone number with + prefix
-      const formattedPhone = formatPhoneNumber(phone);
-      console.log(formattedPhone, "formattedPhone in checkIfUserExists");
+      const phoneOnly = extractPhoneNumberOnly(phone);
       const encodedPath = encodeURIComponent(
-        `auth/check-exists?phone=${formattedPhone}`
+        `auth/check-exists?phone=${phoneOnly}`
       );
       const res = await fetch(`/api/proxy?path=${encodedPath}`, {
         method: "GET",
@@ -185,7 +194,7 @@ const SignIn = () => {
       const encodedPath = encodeURIComponent(`auth/login`);
 
       const payload = {
-        phone: formatPhoneNumber(phone),
+        phone: extractPhoneNumberOnly(phone),
       };
 
       const res = await fetch(`/api/proxy?path=${encodedPath}`, {
