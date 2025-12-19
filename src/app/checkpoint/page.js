@@ -19,7 +19,7 @@ const CheckpointSelectionPage = () => {
   const [accessCookie, setAccessCookie, removeAccessCookie] = useCookies([
     "accessToken",
   ]);
-  const currentCheckpoint = JSON.parse(localStorage.getItem("checkpoint"));
+  const currentCheckpoint =  typeof window !== 'undefined' ? JSON.parse(localStorage.getItem("checkpoint")) : null;
 
   console.log("currentCheckpoint", currentCheckpoint);
   useEffect(() => {

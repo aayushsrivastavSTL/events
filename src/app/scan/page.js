@@ -8,6 +8,7 @@ import dynamic from "next/dynamic";
 import { ImSpinner2 } from "react-icons/im";
 import { Html5Qrcode } from "html5-qrcode";
 import { UserContext } from "@/context/UserContext";
+import { ChevronDown } from "lucide-react";
 
 const DetailsModal = dynamic(() => import("@/components/DetailsModal"), {
   ssr: false,
@@ -20,12 +21,32 @@ export default function ScanPage() {
   const [loading, setLoading] = useState(false);
   const [cameraPermission, setCameraPermission] = useState("prompt");
   const [showModal, setShowModal] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
   const { user } = useContext(UserContext);
   const scannerRef = useRef(null);
   const isStoppingRef = useRef(false);
+  const dropdownRef = useRef(null);
 
-  const storedCheckpoint = JSON.parse(localStorage.getItem("checkpoint"));
+  const storedCheckpoint =
+    typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem("checkpoint"))
+      : null;
   console.log("storedCheckpoint", storedCheckpoint);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     // Cleanup on unmount
@@ -168,6 +189,25 @@ export default function ScanPage() {
     setShowModal(false);
     await startScanning();
   };
+  const handleModeChange = (mode) => {
+    setScanMode(mode);
+    setDropdownOpen(false);
+  };
+
+  const getScanModeFromCheckpoint = (checkpointName) => {
+    if (!checkpointName) return "entry";
+    const lowerName = checkpointName.toLowerCase();
+
+    if (lowerName.includes("entry")) {
+      return "entry";
+    } else if (lowerName.includes("exit")) {
+      return "exit";
+    }
+  };
+
+  const [scanMode, setScanMode] = useState(() =>
+    getScanModeFromCheckpoint(storedCheckpoint?.name)
+  );
 
   return (
     <div className="w-full mt-15 min-h-screen">
@@ -203,6 +243,64 @@ export default function ScanPage() {
             <p className="text-sm md:text-base text-gray-600 mb-6 text-center">
               Scan QR codes using your device camera
             </p>
+            {/* Dropdown for entry & exit */}
+            <div className="mb-6 relative" ref={dropdownRef}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Scan Mode
+              </label>
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="w-full flex items-center justify-between bg-white border border-gray-300 rounded-lg px-4 py-3 text-left hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400 transition-colors"
+                disabled={isScanning}
+              >
+                <span className="capitalize font-medium">
+                  {scanMode === "entry"
+                    ? "Check-In (Entry)"
+                    : "Check-Out (Exit)"}
+                </span>
+                <ChevronDown
+                  className={`w-5 h-5 text-gray-500 transition-transform ${
+                    dropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {/* Dropdown Menu */}
+              {dropdownOpen && (
+                <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                  <button
+                    onClick={() => handleModeChange("entry")}
+                    className={`w-full px-4 py-3 text-left hover:bg-orange-50 transition-colors ${
+                      scanMode === "entry"
+                        ? "bg-orange-100 text-orange-600 font-medium"
+                        : "text-gray-700"
+                    }`}
+                  >
+                    <div>
+                      <div className="font-medium">Check-In (Entry)</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        Scan when visitor enters
+                      </div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => handleModeChange("exit")}
+                    className={`w-full px-4 py-3 text-left hover:bg-orange-50 transition-colors ${
+                      scanMode === "exit"
+                        ? "bg-orange-100 text-orange-600 font-medium"
+                        : "text-gray-700"
+                    }`}
+                  >
+                    <div>
+                      <div className="font-medium">Check-Out (Exit)</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        Scan when visitor exits
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Status indicator */}
             <div
@@ -220,7 +318,7 @@ export default function ScanPage() {
             {/* Scanner viewport */}
             <div
               id="reader"
-              className="w-full min-h-70 md:min-h-80 border border-orange-400 rounded-lg mb-6 overflow-hidden"
+              className="w-full min-h-70 md:min-h-80 bg-gray-100 border border-orange-400 rounded-lg mb-6 overflow-hidden"
             ></div>
 
             {/* Control buttons */}
@@ -267,7 +365,12 @@ export default function ScanPage() {
 
             {/* DetailsModal for result */}
             {showModal && (
-              <DetailsModal onClose={() => setShowModal(false)} data={result} />
+              <DetailsModal
+                onClose={() => setShowModal(false)}
+                data={result}
+                entry={scanMode === "entry"}
+                exit={scanMode === "exit"}
+              />
             )}
           </div>
         </div>
