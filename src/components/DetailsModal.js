@@ -3,11 +3,11 @@ import React, { useState, useEffect } from "react";
 import { RxCross2 } from "react-icons/rx";
 import { toast } from "react-toastify";
 
-const DetailsModal = ({ onClose, data, entry, exit }) => {
+const DetailsModal = ({ onClose, data, entry, exit, manualMode = false }) => {
   const [result, setResult] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [visitorCode, setVisitorCode] = useState(null);
+  const [visitorCode, setVisitorCode] = useState("");
   const [borderColor, setBorderColor] = useState("");
 
   const currentCheckpoint =
@@ -43,11 +43,18 @@ const DetailsModal = ({ onClose, data, entry, exit }) => {
   };
 
   useEffect(() => {
+    if (manualMode) {
+      // Manual entry mode - trigger error state
+      setError("QR code not detected.");
+      setVisitorCode("");
+      return; 
+    }
     if (data) {
       console.log("data from qr code", data);
       try {
         const parsed = JSON.parse(data);
-        const code = parsed.visitorCode;
+        let code = parsed.visitorCode;
+        code = code.toUpperCase();
         console.log(code);
         setVisitorCode(code);
       } catch (err) {
@@ -55,7 +62,7 @@ const DetailsModal = ({ onClose, data, entry, exit }) => {
         setError("Invalid QR code data");
       }
     }
-  }, [data]);
+  }, [data, manualMode]);
 
   const clickHandler = async () => {
     setLoading(true);
@@ -120,34 +127,80 @@ const DetailsModal = ({ onClose, data, entry, exit }) => {
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
         <div
-          className={`w-full max-w-md rounded-xl bg-white shadow-2xl animate-scaleIn border ${getBorderColor(
+          className={`w-full max-w-md rounded-xl bg-white shadow-2xl animate-scaleIn border-2 ${getBorderColor(
             borderColor
           )}`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b px-5 py-4">
-            <h3 className="text-lg font-semibold text-gray-800">Details</h3>
+          <div
+            className={`flex items-center justify-between border-b px-5 py-4 ${getBorderColor(
+              borderColor
+            )}`}
+          >
+            <h4 className="font-semibold text-gray-800">
+              {entry ? "Check-In" : "Check-Out"} Details
+            </h4>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-700 text-xl"
+              className="text-gray-400 hover:text-gray-700 transition-colors"
             >
-              <RxCross2 />
+              <RxCross2 className="text-2xl text-gray-800 font-semibold" />
             </button>
           </div>
 
           {/* Body */}
-          <p className="px-5 py-4 text-gray-700 wrap-break-words whitespace-pre-wrap overflow-x-auto text-sm">
-            {data}
-          </p>
-          {/* Error Display */}
-          {error && <p className="px-5 pb-4 text-red-600">Error: {error}</p>}
-          {/* Result Display */}
-          {result && (
-            <p className={`px-5 pb-4 ${getTextColor(borderColor)}`}>
-              Result: {result}
-            </p>
-          )}
+          <div className="px-5 py-4">
+            {/* QR Code Data */}
+            {!manualMode && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-600 mb-2">
+                  QR Code Data:
+                </label>
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-sm text-gray-700 wrap-break-word whitespace-pre-wrap">
+                    {data}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Error Display with Manual Input */}
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 border-2 border-red-200 rounded-lg">
+                <p className="text-red-600 font-medium mb-3 text-sm">
+                  ⚠️ {error}
+                </p>
+
+                {/* Manual Input Fallback */}
+                <div className="space-y-2">
+                  <label
+                    htmlFor="visitor-code-input"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Enter visitor code / email manually:
+                  </label>
+                  <input
+                    type="text"
+                    id="visitor-code-input"
+                    value={visitorCode}
+                    onChange={(e) =>
+                      setVisitorCode(e.target.value.toUpperCase())
+                    }
+                    placeholder="e.g., VK-12345/visitor@gmail.com"
+                    className="w-full text-sm px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Result Display */}
+            {result && (
+              <p className={`px-5 pb-4 ${getTextColor(borderColor)}`}>
+                Result: {result}
+              </p>
+            )}
+          </div>
 
           {/* Button */}
           <div className="p-5">
@@ -155,14 +208,16 @@ const DetailsModal = ({ onClose, data, entry, exit }) => {
               onClick={clickHandler}
               disabled={loading} //Add error after testing
               className={`w-full py-4 text-white font-bold rounded-xl transition-colors ${
-                loading
-                  ? "opacity-50 cursor-not-allowed"
-                  : error
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
+                loading ? "opacity-50 cursor-not-allowed" : ""
               } ${getButtonColor(borderColor)}`}
             >
-              {loading ? "Processing..." : entry ? "Check-In" : "Check-Out"}
+              {loading
+                ? "Processing..."
+                : error
+                ? "Submit"
+                : entry
+                ? "Check-In"
+                : "Check-Out"}
             </button>
           </div>
         </div>

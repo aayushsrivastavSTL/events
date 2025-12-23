@@ -35,7 +35,7 @@ const CheckpointSelectionPage = () => {
         }
 
         const encodedPath = encodeURIComponent(
-          "volunteer/get-checkin-points-name"
+          "volunteer/get-checkin-points-info"
         );
         const res = await fetch(`/api/proxy?path=${encodedPath}`, {
           method: "GET",
