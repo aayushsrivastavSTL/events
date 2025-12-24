@@ -17,7 +17,6 @@ export default function ScanPage() {
   const [loading, setLoading] = useState(false);
   const [cameraPermission, setCameraPermission] = useState("prompt");
   const [showModal, setShowModal] = useState(false);
-  const [scanMode, setScanMode] = useState("entry");
   const { user } = useContext(UserContext);
   const scannerRef = useRef(null);
   const isStoppingRef = useRef(false);
@@ -40,23 +39,6 @@ export default function ScanPage() {
       }
     };
   }, []);
-
-  //extract checkpoint type
-  useEffect(() => {
-    if (!storedCheckpoint) return;
-    const getScanModeFromCheckpoint = (checkpoint) => {
-      const lowerName = checkpoint.name.toLowerCase();
-      const type = checkpoint.type.toLowerCase();
-
-      if (lowerName.includes("entry") || type === "entry") {
-        setScanMode("entry");
-      } else {
-        setScanMode("exit");
-      }
-    };
-
-    getScanModeFromCheckpoint(storedCheckpoint);
-  }, [storedCheckpoint]);
 
   const requestCameraPermission = async () => {
     try {
@@ -306,8 +288,6 @@ export default function ScanPage() {
                   setError(null);
                 }}
                 data={result}
-                entry={scanMode === "entry"}
-                exit={scanMode === "exit"}
                 manualMode={error === "Manual entry mode"}
               />
             )}

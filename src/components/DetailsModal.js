@@ -4,7 +4,7 @@ import { RxCross2 } from "react-icons/rx";
 import { toast } from "react-toastify";
 import { identifyVisitorIdentifier } from "@/components/utility/formatCheck";
 
-const DetailsModal = ({ onClose, data, entry, exit, manualMode = false }) => {
+const DetailsModal = ({ onClose, data, manualMode = false }) => {
   const [result, setResult] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -74,9 +74,7 @@ const DetailsModal = ({ onClose, data, entry, exit, manualMode = false }) => {
     const details = identifyVisitorIdentifier(visitorDetails);
     const finalEmail = details.type === "email" ? details.value : null;
 
-    const endpoint = entry
-      ? "volunteer/scan/checkin"
-      : "volunteer/scan/checkout";
+    const endpoint = "volunteer/scan/checkin";
 
     try {
       const encodedPath = encodeURIComponent(endpoint);
@@ -187,9 +185,7 @@ const DetailsModal = ({ onClose, data, entry, exit, manualMode = false }) => {
               borderColor
             )}`}
           >
-            <h4 className="font-semibold text-gray-800">
-              {entry ? "Check-In" : "Check-Out"} Details
-            </h4>
+            <h4 className="font-semibold text-gray-800">Scan Details</h4>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-700 transition-colors"
@@ -258,13 +254,7 @@ const DetailsModal = ({ onClose, data, entry, exit, manualMode = false }) => {
                 loading ? "opacity-50 cursor-not-allowed" : ""
               } ${getButtonColor(borderColor)}`}
             >
-              {loading
-                ? "Processing..."
-                : error
-                ? "Submit"
-                : entry
-                ? "Check-In"
-                : "Check-Out"}
+              {loading ? "Processing..." : error ? "Submit" : "Check-In"}
             </button>
           </div>
         </div>
