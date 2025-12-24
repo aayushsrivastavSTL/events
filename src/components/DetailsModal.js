@@ -9,9 +9,10 @@ const DetailsModal = ({ onClose, data, entry, exit, manualMode = false }) => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [visitorCode, setVisitorCode] = useState("");
-  const [visitorEmail, setVisitorEmail] = useState("");
   const [visitorDetails, setVisitorDetails] = useState("");
   const [borderColor, setBorderColor] = useState("");
+  const [showVIPPopup, setShowVIPPopup] = useState(false);
+  const [vipVisitorInfo, setVipVisitorInfo] = useState(null);
 
   const currentCheckpoint =
     typeof window !== "undefined"
@@ -70,7 +71,8 @@ const DetailsModal = ({ onClose, data, entry, exit, manualMode = false }) => {
   const clickHandler = async () => {
     setLoading(true);
     setError(null);
-    handleVisitorDetailsType();
+    const details = identifyVisitorIdentifier(visitorDetails);
+    const finalEmail = details.type === "email" ? details.value : null;
 
     const endpoint = entry
       ? "volunteer/scan/checkin"
@@ -86,7 +88,7 @@ const DetailsModal = ({ onClose, data, entry, exit, manualMode = false }) => {
         body: JSON.stringify({
           visitorCode: visitorCode,
           checkinpointID: currentCheckpoint.id,
-          email: visitorEmail ? visitorEmail : null,
+          email: finalEmail,
         }),
         credentials: "include",
       });
@@ -107,6 +109,18 @@ const DetailsModal = ({ onClose, data, entry, exit, manualMode = false }) => {
       console.log("Response data:", data);
       setResult(data.message);
       setBorderColor(data.checkFlag);
+
+      // Check if visitor is VIP
+      if (data.visitorInfo && data.visitorInfo.type === "VIP") {
+        setVipVisitorInfo(data.visitorInfo);
+        setShowVIPPopup(true);
+
+        // Auto-hide VIP popup after 5 seconds
+        setTimeout(() => {
+          setShowVIPPopup(false);
+        }, 5000);
+      }
+
       toast.success(data.message, {
         position: "top-center",
       });
@@ -121,17 +135,6 @@ const DetailsModal = ({ onClose, data, entry, exit, manualMode = false }) => {
     }
   };
 
-  const handleVisitorDetailsType = () => {
-    const details = identifyVisitorIdentifier(visitorDetails);
-
-    if (details.type === "code") {
-      setVisitorCode(details.value);
-    }
-    if (details.type === "email") {
-      setVisitorEmail(details.value);
-    }
-  };
-
   return (
     <>
       {/* Overlay */}
@@ -139,6 +142,36 @@ const DetailsModal = ({ onClose, data, entry, exit, manualMode = false }) => {
         className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm h-screen w-screen"
         onClick={onClose}
       />
+      {/* VIP Pop-up Notification */}
+      {showVIPPopup && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-60 animate-slideDown">
+          <div className="bg-linear-to-r from-purple-600 to-pink-600 text-white px-8 py-6 rounded-2xl shadow-2xl border-4 border-yellow-400 min-w-[320px]">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <span className="text-4xl animate-bounce">👑</span>
+                <h3 className="text-2xl font-bold">VIP GUEST</h3>
+              </div>
+              <button
+                onClick={() => setShowVIPPopup(false)}
+                className="text-white hover:text-yellow-300 transition-colors"
+              >
+                <RxCross2 className="text-2xl" />
+              </button>
+            </div>
+            {vipVisitorInfo && (
+              <div className="space-y-2 text-lg">
+                <p className="font-semibold">{vipVisitorInfo.name}</p>
+                <p className="text-sm opacity-90">{vipVisitorInfo.event}</p>
+              </div>
+            )}
+            <div className="mt-4 text-center">
+              <p className="text-sm font-medium bg-yellow-400 text-purple-900 px-4 py-2 rounded-full inline-block">
+                Acccess to all events
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
