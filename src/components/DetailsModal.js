@@ -2,12 +2,15 @@
 import React, { useState, useEffect } from "react";
 import { RxCross2 } from "react-icons/rx";
 import { toast } from "react-toastify";
+import { identifyVisitorIdentifier } from "@/components/utility/formatCheck";
 
 const DetailsModal = ({ onClose, data, entry, exit, manualMode = false }) => {
   const [result, setResult] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [visitorCode, setVisitorCode] = useState("");
+  const [visitorEmail, setVisitorEmail] = useState("");
+  const [visitorDetails, setVisitorDetails] = useState("");
   const [borderColor, setBorderColor] = useState("");
 
   const currentCheckpoint =
@@ -47,7 +50,7 @@ const DetailsModal = ({ onClose, data, entry, exit, manualMode = false }) => {
       // Manual entry mode - trigger error state
       setError("QR code not detected.");
       setVisitorCode("");
-      return; 
+      return;
     }
     if (data) {
       console.log("data from qr code", data);
@@ -67,6 +70,7 @@ const DetailsModal = ({ onClose, data, entry, exit, manualMode = false }) => {
   const clickHandler = async () => {
     setLoading(true);
     setError(null);
+    handleVisitorDetailsType();
 
     const endpoint = entry
       ? "volunteer/scan/checkin"
@@ -82,6 +86,7 @@ const DetailsModal = ({ onClose, data, entry, exit, manualMode = false }) => {
         body: JSON.stringify({
           visitorCode: visitorCode,
           checkinpointID: currentCheckpoint.id,
+          email: visitorEmail ? visitorEmail : null,
         }),
         credentials: "include",
       });
@@ -113,6 +118,17 @@ const DetailsModal = ({ onClose, data, entry, exit, manualMode = false }) => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVisitorDetailsType = () => {
+    const details = identifyVisitorIdentifier(visitorDetails);
+
+    if (details.type === "code") {
+      setVisitorCode(details.value);
+    }
+    if (details.type === "email") {
+      setVisitorEmail(details.value);
     }
   };
 
@@ -183,10 +199,8 @@ const DetailsModal = ({ onClose, data, entry, exit, manualMode = false }) => {
                   <input
                     type="text"
                     id="visitor-code-input"
-                    value={visitorCode}
-                    onChange={(e) =>
-                      setVisitorCode(e.target.value.toUpperCase())
-                    }
+                    value={visitorDetails}
+                    onChange={(e) => setVisitorDetails(e.target.value)}
                     placeholder="e.g., VK-12345/visitor@gmail.com"
                     className="w-full text-sm px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                   />
