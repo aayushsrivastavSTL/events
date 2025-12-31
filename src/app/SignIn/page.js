@@ -158,10 +158,11 @@ const SignIn = () => {
   const checkIfUserExists = async () => {
     try {
       // Format phone number with + prefix
-      const phoneOnly = extractPhoneNumberOnly(phone);
-      const encodedPath = encodeURIComponent(
-        `auth/check-exists?phone=${phoneOnly}`
-      );
+      const phoneOnly = formatPhoneNumber(phone);
+      // Encode the phone number separately to preserve the + sign
+      const encodedPhone = encodeURIComponent(phoneOnly);
+      const path = `auth/check-exists?phone=${encodedPhone}`;
+      const encodedPath = encodeURIComponent(path);
       const res = await fetch(`/api/proxy?path=${encodedPath}`, {
         method: "GET",
         headers: {
@@ -192,11 +193,6 @@ const SignIn = () => {
   const logInProcesses = async (firebaseToken) => {
     try {
       const encodedPath = encodeURIComponent(`auth/login`);
-
-      const payload = {
-        phone: extractPhoneNumberOnly(phone),
-      };
-
       const res = await fetch(`/api/proxy?path=${encodedPath}`, {
         method: "POST",
         headers: {
@@ -204,7 +200,6 @@ const SignIn = () => {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify(payload),
       });
 
       if (!res.ok) throw new Error("Failed to fetch");

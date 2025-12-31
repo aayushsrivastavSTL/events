@@ -19,7 +19,10 @@ const CheckpointSelectionPage = () => {
   const [accessCookie, setAccessCookie, removeAccessCookie] = useCookies([
     "accessToken",
   ]);
-  const currentCheckpoint =  typeof window !== 'undefined' ? JSON.parse(localStorage.getItem("checkpoint")) : null;
+  const currentCheckpoint =
+    typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem("checkpoint"))
+      : null;
 
   console.log("currentCheckpoint", currentCheckpoint);
   useEffect(() => {
@@ -53,7 +56,15 @@ const CheckpointSelectionPage = () => {
         console.log("fetchCheckpointsName", data);
 
         if (data?.data) {
-          setCheckpoints(data.data);
+          console.log("data.data", data.data);
+          const list = data.data.filter((item) => {
+          const endDate = new Date(item.eventEndDate);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          return endDate >= today;
+          });
+          console.log("list", list);
+          setCheckpoints(list);
 
           if (currentCheckpoint) {
             setSelectedCheckpoint(
